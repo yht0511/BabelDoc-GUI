@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "outDir": "dist-electron/main",
+    "rootDir": "electron/main",
+    "resolveJsonModule": true,
+    "types": ["node", "electron"]
+  },
+  "include": ["electron/main/**/*.ts"]
+}

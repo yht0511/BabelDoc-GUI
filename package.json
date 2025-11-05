@@ -1,0 +1,90 @@
+{
+  "name": "babeldoc-gui",
+  "version": "0.1.0",
+  "description": "Cross-platform Electron GUI for the BabelDOC translation workflow.",
+  "main": "dist-electron/main/index.js",
+  "author": "",
+  "type": "module",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "build:mac": "npm run build && electron-builder --mac",
+    "build:mac-arm64": "npm run build && electron-builder --mac --arm64",
+    "build:mac-x64": "npm run build && electron-builder --mac --x64",
+    "build:mac-universal": "npm run build && electron-builder --mac --universal"
+  },
+  "dependencies": {
+    "@radix-ui/react-dialog": "^1.1.1",
+    "@radix-ui/react-label": "^2.1.0",
+    "@radix-ui/react-scroll-area": "^1.1.0",
+    "@radix-ui/react-separator": "^1.1.0",
+    "@radix-ui/react-slot": "^1.1.0",
+    "@radix-ui/react-switch": "^1.1.0",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.1",
+    "electron-log": "^5.1.2",
+    "electron-store": "^10.0.0",
+    "lucide-react": "^0.424.0",
+    "pdf-parse": "^1.1.1",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "tailwind-merge": "^2.5.2",
+    "zustand": "^4.5.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.25",
+    "@types/pdf-parse": "^1.1.4",
+    "@types/react": "^18.2.45",
+    "@types/react-dom": "^18.2.18",
+    "@vitejs/plugin-react": "^4.3.1",
+    "autoprefixer": "^10.4.19",
+    "electron": "^32.1.2",
+    "electron-builder": "^26.0.12",
+    "electron-vite": "^2.3.0",
+    "postcss": "^8.4.41",
+    "tailwindcss": "^3.4.13",
+    "tslib": "^2.6.3",
+    "typescript": "^5.4.5",
+    "vite": "^5.2.12"
+  },
+  "build": {
+    "appId": "com.babeldoc.gui",
+    "productName": "BabelDOC",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist-electron/**/*",
+      "dist/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "category": "public.app-category.productivity",
+      "icon": "build/icon.icns",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
+    },
+    "dmg": {
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    }
+  }
+}

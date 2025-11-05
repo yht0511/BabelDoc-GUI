@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "outDir": "dist-electron/preload",
+    "rootDir": "electron",
+    "resolveJsonModule": true,
+    "types": ["node", "electron", "electron/main"]
+  },
+  "include": ["electron/preload/**/*.ts", "electron/main/types.ts"]
+}
