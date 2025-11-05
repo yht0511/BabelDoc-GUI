@@ -27,17 +27,20 @@ const emitStatus = (
 
 const execFileAsync = promisify(execFile);
 
-// 获取扩展的环境变量（包含常见的 Python 路径）
+// 获取扩展的环境变量（包含常见的 Python 和工具路径）
 const getExtendedEnv = (): NodeJS.ProcessEnv => {
+  const homeDir = process.env.HOME || "";
   const commonPaths = [
     "/usr/local/bin",
     "/opt/homebrew/bin",
     "/usr/bin",
-    join(process.env.HOME || "", ".pyenv/shims"),
-    join(process.env.HOME || "", "Library/Python/3.11/bin"),
-    join(process.env.HOME || "", "Library/Python/3.10/bin"),
+    join(homeDir, ".pyenv/shims"),
+    join(homeDir, ".local/bin"), // uv 默认安装路径
+    join(homeDir, ".cargo/bin"), // Rust 工具（uv 的另一个安装位置）
+    join(homeDir, "Library/Python/3.11/bin"),
+    join(homeDir, "Library/Python/3.10/bin"),
   ];
-  
+
   return {
     ...process.env,
     PATH: [...commonPaths, process.env.PATH || ""].join(":"),
@@ -99,9 +102,9 @@ const runCommandStreaming = async (
 const detectPython = async (): Promise<string> => {
   const candidates =
     process.platform === "win32" ? ["python", "py"] : ["python3", "python"];
-  
+
   log.info(`[env] Searching for Python in extended PATH`);
-  
+
   for (const candidate of candidates) {
     try {
       const { stdout } = await runCommand(candidate, ["--version"]);
@@ -117,25 +120,56 @@ const detectPython = async (): Promise<string> => {
       log.warn(`[env] Python candidate ${candidate} not suitable`, error);
     }
   }
-  throw new Error("未检测到兼容的 Python 3.10+ 运行时。请确保已安装 Python 3.10 或更高版本。");
+  throw new Error(
+    "未检测到兼容的 Python 3.10+ 运行时。请确保已安装 Python 3.10 或更高版本。"
+  );
 };
 
 const ensureUvInstalled = async (
   pythonPath: string,
   notify: (chunk: string) => void
 ): Promise<string> => {
+  // 首先检查 uv 是否已安装
   try {
     const { stdout } = await runCommand("uv", ["--version"]);
     log.info(`[env] uv already installed: ${stdout}`);
     return "uv";
   } catch {
-    notify("正在安装 uv，首次执行可能需要几分钟…\n");
-    await runCommandStreaming(
-      pythonPath,
-      ["-m", "pip", "install", "--upgrade", "uv"],
-      notify
-    );
-    return "uv";
+    // uv 未安装，尝试使用官方安装脚本
+    notify("正在安装 uv（首次执行可能需要几分钟）…\n");
+    log.info(`[env] Installing uv using official installer`);
+    
+    try {
+      // 使用官方安装脚本（适用于 macOS/Linux）
+      if (process.platform !== "win32") {
+        await runCommandStreaming(
+          "sh",
+          ["-c", "curl -LsSf https://astral.sh/uv/install.sh | sh"],
+          (chunk) => {
+            notify(chunk);
+            log.info(`[env] uv install: ${chunk.trim()}`);
+          }
+        );
+      } else {
+        // Windows 使用 pip 安装
+        await runCommandStreaming(
+          pythonPath,
+          ["-m", "pip", "install", "--user", "--upgrade", "uv"],
+          notify
+        );
+      }
+      
+      // 验证安装
+      const { stdout } = await runCommand("uv", ["--version"]);
+      log.info(`[env] uv installed successfully: ${stdout}`);
+      return "uv";
+    } catch (error) {
+      log.error(`[env] Failed to install uv`, error);
+      throw new Error(
+        `安装 uv 失败：${error instanceof Error ? error.message : String(error)}。\n` +
+        `您可以手动安装：curl -LsSf https://astral.sh/uv/install.sh | sh`
+      );
+    }
   }
 };
 
