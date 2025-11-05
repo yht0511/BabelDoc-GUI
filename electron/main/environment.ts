@@ -27,12 +27,30 @@ const emitStatus = (
 
 const execFileAsync = promisify(execFile);
 
+// 获取扩展的环境变量（包含常见的 Python 路径）
+const getExtendedEnv = (): NodeJS.ProcessEnv => {
+  const commonPaths = [
+    "/usr/local/bin",
+    "/opt/homebrew/bin",
+    "/usr/bin",
+    join(process.env.HOME || "", ".pyenv/shims"),
+    join(process.env.HOME || "", "Library/Python/3.11/bin"),
+    join(process.env.HOME || "", "Library/Python/3.10/bin"),
+  ];
+  
+  return {
+    ...process.env,
+    PATH: [...commonPaths, process.env.PATH || ""].join(":"),
+  };
+};
+
 const runCommand = async (
   command: string,
   args: string[],
   options: CommandOptions = {}
 ): Promise<{ stdout: string; stderr: string }> => {
   const { stdout, stderr } = await execFileAsync(command, args, {
+    env: getExtendedEnv(),
     ...options,
     encoding: "utf-8",
   });
@@ -47,6 +65,7 @@ const runCommandStreaming = async (
 ): Promise<number> => {
   return new Promise((resolve, reject) => {
     const proc = spawn(command, args, {
+      env: getExtendedEnv(),
       ...options,
       stdio: "pipe",
     });
@@ -80,6 +99,9 @@ const runCommandStreaming = async (
 const detectPython = async (): Promise<string> => {
   const candidates =
     process.platform === "win32" ? ["python", "py"] : ["python3", "python"];
+  
+  log.info(`[env] Searching for Python in extended PATH`);
+  
   for (const candidate of candidates) {
     try {
       const { stdout } = await runCommand(candidate, ["--version"]);
@@ -95,7 +117,7 @@ const detectPython = async (): Promise<string> => {
       log.warn(`[env] Python candidate ${candidate} not suitable`, error);
     }
   }
-  throw new Error("未检测到兼容的 Python 3.10+ 运行时。");
+  throw new Error("未检测到兼容的 Python 3.10+ 运行时。请确保已安装 Python 3.10 或更高版本。");
 };
 
 const ensureUvInstalled = async (

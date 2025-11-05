@@ -344,7 +344,18 @@ const createWindow = async () => {
   if (isDev && process.env.ELECTRON_RENDERER_URL) {
     await mainWindow.loadURL(process.env.ELECTRON_RENDERER_URL);
   } else {
-    await mainWindow.loadFile(join(currentDir, "../../index.html"));
+    // 打包后使用 __dirname 定位文件
+    // 开发环境: dist-electron/main/index.js
+    // 打包环境: app.asar/dist-electron/main/index.js
+    const distPath = join(__dirname, "../../dist");
+    const indexPath = join(distPath, "index.html");
+    
+    log.info(`[main] __dirname: ${__dirname}`);
+    log.info(`[main] distPath: ${distPath}`);
+    log.info(`[main] Loading index.html from: ${indexPath}`);
+    log.info(`[main] File exists: ${existsSync(indexPath)}`);
+    
+    await mainWindow.loadFile(indexPath);
   }
 };
 
