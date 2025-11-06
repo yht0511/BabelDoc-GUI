@@ -57,8 +57,13 @@
     "files": [
       "dist-electron/**/*",
       "dist/**/*",
-      "node_modules/**/*",
-      "package.json"
+      "package.json",
+      "node_modules/electron-log/**/*",
+      "node_modules/electron-store/**/*",
+      "node_modules/pdf-parse/**/*"
+    ],
+    "asarUnpack": [
+      "node_modules/pdf-parse/**/*"
     ],
     "mac": {
       "target": [

@@ -12,8 +12,27 @@ export default defineConfig({
       outDir: "dist-electron/main",
       rollupOptions: {
         input: resolve(rootDir, "electron/main/index.ts"),
-        external: ["electron", "electron-log", "pdf-parse", /node_modules/],
+        external: [
+          "electron",
+          "electron-log",
+          "electron-store",
+          "pdf-parse",
+          "node:path",
+          "node:fs",
+          "node:fs/promises",
+          "node:url",
+          "node:child_process",
+          "node:os",
+          /^node:/,
+        ],
+        output: {
+          format: "es",
+        },
       },
+    },
+    resolve: {
+      // 不使用别名，使用相对路径
+      mainFields: ["module", "main"],
     },
   },
   preload: {
@@ -21,6 +40,10 @@ export default defineConfig({
       outDir: "dist-electron/preload",
       rollupOptions: {
         input: resolve(rootDir, "electron/preload/index.ts"),
+        external: ["electron"],
+        output: {
+          format: "cjs", // preload 脚本通常使用 CommonJS
+        },
       },
     },
   },
