@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { cn, formatDateTime } from "@/lib/utils";
 import {
+  BookOpen,
   ExternalLink,
   FileText,
   Info,
@@ -147,6 +148,34 @@ const HistoryPage = () => {
       }
     } catch (error) {
       console.error("Failed to open history record", error);
+      setPageError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setOpeningId(null);
+    }
+  };
+
+  const handleOpenFile = async (record: TranslationRecord) => {
+    if (!electron) {
+      setPageError("当前环境未检测到 electronAPI，无法打开文件。");
+      return;
+    }
+    const target = record.savePath ?? record.translatedPath;
+    if (!target) {
+      setPageError("该记录没有可打开的翻译文件。");
+      return;
+    }
+    console.log("Opening file:", target);
+    setOpeningId(record.id);
+    setPageError(null);
+    setPageMessage(null);
+    try {
+      const result = await electron.app.openFile(target);
+      console.log("Open file result:", result);
+      if (!result) {
+        throw new Error("系统未能打开文件，请手动检查。");
+      }
+    } catch (error) {
+      console.error("Failed to open file", error);
       setPageError(error instanceof Error ? error.message : String(error));
     } finally {
       setOpeningId(null);
@@ -350,6 +379,22 @@ const HistoryPage = () => {
                       />
                       打开所在位置
                     </Button>
+                    {(record.savePath || record.translatedPath) && (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => handleOpenFile(record)}
+                        disabled={openingId === record.id}
+                      >
+                        <BookOpen
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            openingId === record.id && "animate-spin"
+                          )}
+                        />
+                        打开双语对照
+                      </Button>
+                    )}
                     <Button
                       variant="outline"
                       size="sm"
@@ -463,21 +508,40 @@ const HistoryPage = () => {
               关闭
             </Button>
             {selectedRecord && (
-              <Button
-                variant="secondary"
-                onClick={() =>
-                  selectedRecord && handleOpenRecord(selectedRecord)
-                }
-                disabled={openingId === selectedRecord.id}
-              >
-                <ExternalLink
-                  className={cn(
-                    "mr-2 h-4 w-4",
-                    openingId === selectedRecord.id && "animate-spin"
-                  )}
-                />
-                打开所在位置
-              </Button>
+              <>
+                <Button
+                  variant="secondary"
+                  onClick={() =>
+                    selectedRecord && handleOpenRecord(selectedRecord)
+                  }
+                  disabled={openingId === selectedRecord.id}
+                >
+                  <ExternalLink
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      openingId === selectedRecord.id && "animate-spin"
+                    )}
+                  />
+                  打开所在位置
+                </Button>
+                {(selectedRecord.savePath || selectedRecord.translatedPath) && (
+                  <Button
+                    variant="secondary"
+                    onClick={() =>
+                      selectedRecord && handleOpenFile(selectedRecord)
+                    }
+                    disabled={openingId === selectedRecord.id}
+                  >
+                    <BookOpen
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        openingId === selectedRecord.id && "animate-spin"
+                      )}
+                    />
+                    打开双语对照
+                  </Button>
+                )}
+              </>
             )}
           </DialogFooter>
         </DialogContent>

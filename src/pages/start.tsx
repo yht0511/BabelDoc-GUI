@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/dialog";
 import { cn, formatDateTime } from "@/lib/utils";
 import {
+  BookOpen,
   Loader2,
   Upload,
   Link as LinkIcon,
@@ -192,6 +193,21 @@ const StartPage = () => {
     }
   };
 
+  const handleOpenFile = async (filePath?: string) => {
+    if (!electron || !filePath) return;
+    console.log("Opening file:", filePath);
+    try {
+      const result = await electron.app.openFile(filePath);
+      console.log("Open file result:", result);
+      if (!result) {
+        setPageError("无法打开文件，请检查文件是否存在。");
+      }
+    } catch (error) {
+      console.error("Failed to open file", error);
+      setPageError("无法打开文件，请手动查看。");
+    }
+  };
+
   const ensureEnvironment = async () => {
     if (!electron) return;
     setLoadingAction("environment");
@@ -308,16 +324,16 @@ const StartPage = () => {
           {Object.values(environmentStatuses).map((status) => (
             <div
               key={status.stage}
-              className="flex items-start justify-between rounded-lg border border-border/60 bg-muted/30 px-3 py-2"
+              className="flex items-start justify-between gap-3 rounded-lg border border-border/60 bg-muted/30 px-3 py-2"
             >
-              <div>
+              <div className="flex-1 min-w-0 overflow-hidden">
                 <p className="text-sm font-medium capitalize">
                   {status.stage === "uv-bin-dir"
                     ? "BabelDOC 路径"
                     : status.stage}
                 </p>
                 {status.message && (
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground font-mono overflow-x-auto whitespace-nowrap scrollbar-thin">
                     {status.message}
                   </p>
                 )}
@@ -330,6 +346,7 @@ const StartPage = () => {
                     ? "destructive"
                     : "secondary"
                 }
+                className="flex-shrink-0"
               >
                 {status.status === "success"
                   ? "就绪"
@@ -343,11 +360,39 @@ const StartPage = () => {
           ))}
         </div>
         {environmentSummary && (
-          <div className="grid gap-2 rounded-md bg-muted/20 p-3 text-xs text-muted-foreground">
-            <p>Python: {environmentSummary.pythonPath}</p>
-            <p>uv: {environmentSummary.uvPath}</p>
-            <p>BabelDOC: {environmentSummary.babeldocPath}</p>
-            <p>工具目录: {environmentSummary.uvBinDir}</p>
+          <div className="space-y-2 rounded-md bg-muted/20 p-3 text-xs">
+            <div className="flex items-center gap-2">
+              <span className="font-medium text-foreground/80 flex-shrink-0">
+                Python:
+              </span>
+              <code className="font-mono text-muted-foreground overflow-x-auto whitespace-nowrap flex-1 scrollbar-thin">
+                {environmentSummary.pythonPath}
+              </code>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="font-medium text-foreground/80 flex-shrink-0">
+                uv:
+              </span>
+              <code className="font-mono text-muted-foreground overflow-x-auto whitespace-nowrap flex-1 scrollbar-thin">
+                {environmentSummary.uvPath}
+              </code>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="font-medium text-foreground/80 flex-shrink-0">
+                BabelDOC:
+              </span>
+              <code className="font-mono text-muted-foreground overflow-x-auto whitespace-nowrap flex-1 scrollbar-thin">
+                {environmentSummary.babeldocPath}
+              </code>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="font-medium text-foreground/80 flex-shrink-0">
+                工具目录:
+              </span>
+              <code className="font-mono text-muted-foreground overflow-x-auto whitespace-nowrap flex-1 scrollbar-thin">
+                {environmentSummary.uvBinDir}
+              </code>
+            </div>
           </div>
         )}
         <div className="flex flex-wrap gap-2">
@@ -476,13 +521,24 @@ const StartPage = () => {
               </Button>
             )}
             {job.status === "success" && (job.savePath || job.outputDir) && (
-              <Button
-                variant="secondary"
-                onClick={() => handleOpenPath(job.savePath || job.outputDir)}
-              >
-                <ExternalLink className="mr-2 h-4 w-4" />
-                打开保存目录
-              </Button>
+              <>
+                <Button
+                  variant="secondary"
+                  onClick={() => handleOpenPath(job.savePath || job.outputDir)}
+                >
+                  <ExternalLink className="mr-2 h-4 w-4" />
+                  打开所在位置
+                </Button>
+                {job.savePath && (
+                  <Button
+                    variant="secondary"
+                    onClick={() => handleOpenFile(job.savePath)}
+                  >
+                    <BookOpen className="mr-2 h-4 w-4" />
+                    打开双语对照
+                  </Button>
+                )}
+              </>
             )}
             {job.status === "failed" && job.outputDir && (
               <Button

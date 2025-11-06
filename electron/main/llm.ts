@@ -147,15 +147,75 @@ const composePrompt = (
   const folderBlock = folderTree
     ? `\n${folderTree}`
     : "  (当前目录为空，可自由创建新目录)";
-  return `你是一个专业的图书管理员。你的任务是为一个PDF文档建议一个最合适的存放子目录。
-这是文档的标题："${insight.title}"
-这是文档的摘要或内容片段："${insight.abstractSnippet}"
+  return `你是一个专业的学术文献管理员，负责为 PDF 文档设计最佳的归档路径。
 
-我当前的文件夹结构如下：
-- ${settings.documentRoot}/
+## 文档信息
+- **标题**: ${insight.title}
+- **摘要/内容片段**: ${insight.abstractSnippet}
+
+## 当前文件夹结构
+${settings.documentRoot}/
 ${folderBlock}
 
-请根据文档内容，从现有分类中选择一个最合适的路径，或者创建一个新的、合理的一级或二级子目录。只返回最终的建议路径，例如："${settings.documentRoot}/Computer_Science/Machine_Learning"。如果需要创建新目录，请直接包含在路径中，例如："${settings.documentRoot}/Computer_Science/NLP"。`;
+## 任务要求
+1. **路径层次**: 必须创建完整的学科分类层次（2-3级），从宏观领域到具体子领域
+   - 示例: Computer_Science → Machine_Learning → Transformers
+   - 示例: Physics → Quantum_Mechanics → Quantum_Computing
+
+2. **目录命名规范**:
+   - 使用英文
+   - 使用下划线连接多个单词 (例如: Natural_Language_Processing)
+   - 首字母大写 (例如: Deep_Learning 而非 deep_learning)
+   - 避免使用特殊字符和空格
+
+3. **路径选择策略**:
+   - **优先复用**: 如果现有目录结构中已有合适的分类，优先使用
+   - **禁止扁平化存储**: 
+     * ❌ 错误：如果存在 "Computer_Science/Machine_Learning/"，不能将文件放在 "Computer_Science/" 下
+     * ✅ 正确：必须放在 "Computer_Science/Machine_Learning/Deep_Learning" 或其他三级目录
+     * **规则：文件必须存储在叶子节点（没有子目录的最深层目录）**
+   - **创建新路径**: 如果现有分类不合适，创建新的完整层次路径
+   - **保持一致性**: 新建目录应与现有目录风格保持一致
+
+4. **学科领域参考** (常见一级分类):
+   - Computer_Science (计算机科学)
+   - Mathematics (数学)
+   - Physics (物理学)
+   - Biology (生物学)
+   - Chemistry (化学)
+   - Engineering (工程学)
+   - Economics (经济学)
+   - Medicine (医学)
+
+## 严格禁止的行为示例
+假设现有结构:
+${settings.documentRoot}/
+  - Computer_Science/
+    - Machine_Learning/
+    - Computer_Vision/
+  - Physics/
+    - Quantum_Mechanics/
+
+❌ **错误**: ${settings.documentRoot}/Computer_Science  (Computer_Science 下已有子目录，不能直接存储文件)
+❌ **错误**: ${settings.documentRoot}/Physics  (Physics 下已有子目录，不能直接存储文件)
+✅ **正确**: ${settings.documentRoot}/Computer_Science/Machine_Learning/Reinforcement_Learning
+✅ **正确**: ${settings.documentRoot}/Computer_Science/Natural_Language_Processing/LLM
+✅ **正确**: ${settings.documentRoot}/Physics/Quantum_Mechanics/Quantum_Computing
+
+## 输出要求
+**仅返回完整的绝对路径，不要有任何解释或额外文字**
+
+正确示例:
+- ${settings.documentRoot}/Computer_Science/Machine_Learning/Reinforcement_Learning
+- ${settings.documentRoot}/Physics/Astrophysics/Black_Holes
+- ${settings.documentRoot}/Biology/Genetics/CRISPR_Technology
+
+错误示例:
+- "我建议放在这个路径: /path/to/folder" (包含多余文字)
+- ${settings.documentRoot}/Computer_Science (层次不够完整，且该目录下已有子目录)
+- ${settings.documentRoot}/AI/ML (缩写不规范)
+
+现在请为这篇文档建议路径:`;
 };
 
 const normaliseBaseUrl = (baseUrl: string) => {
@@ -194,6 +254,7 @@ export const requestPathSuggestion = async (
       },
     ],
   };
+  log.info(`[llm] Sending request to LLM with model ${settings.openaiModel}`);
 
   const url = `${normaliseBaseUrl(settings.openaiBaseUrl)}/chat/completions`;
   const response = await fetch(url, {

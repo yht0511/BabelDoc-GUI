@@ -138,7 +138,7 @@ const ensureUvInstalled = async (
     // uv 未安装，尝试使用官方安装脚本
     notify("正在安装 uv（首次执行可能需要几分钟）…\n");
     log.info(`[env] Installing uv using official installer`);
-    
+
     try {
       // 使用官方安装脚本（适用于 macOS/Linux）
       if (process.platform !== "win32") {
@@ -158,7 +158,7 @@ const ensureUvInstalled = async (
           notify
         );
       }
-      
+
       // 验证安装
       const { stdout } = await runCommand("uv", ["--version"]);
       log.info(`[env] uv installed successfully: ${stdout}`);
@@ -166,8 +166,10 @@ const ensureUvInstalled = async (
     } catch (error) {
       log.error(`[env] Failed to install uv`, error);
       throw new Error(
-        `安装 uv 失败：${error instanceof Error ? error.message : String(error)}。\n` +
-        `您可以手动安装：curl -LsSf https://astral.sh/uv/install.sh | sh`
+        `安装 uv 失败：${
+          error instanceof Error ? error.message : String(error)
+        }。\n` +
+          `您可以手动安装：curl -LsSf https://astral.sh/uv/install.sh | sh`
       );
     }
   }

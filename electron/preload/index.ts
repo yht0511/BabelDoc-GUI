@@ -88,6 +88,7 @@ const api = {
   app: {
     openPath: (targetPath: string) =>
       invoke<boolean>("app:open-path", targetPath),
+    openFile: (filePath: string) => invoke<boolean>("app:open-file", filePath),
   },
 };
 

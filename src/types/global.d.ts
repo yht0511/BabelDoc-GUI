@@ -75,6 +75,7 @@ interface ElectronAPI {
   };
   app: {
     openPath: (targetPath: string) => Promise<boolean>;
+    openFile: (filePath: string) => Promise<boolean>;
   };
 }
 

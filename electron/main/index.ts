@@ -92,7 +92,22 @@ const registerIpcHandlers = () => {
 
   ipcMain.handle("history:open", async (_event, targetPath: string) => {
     if (!targetPath) return false;
-    await shell.showItemInFolder(targetPath);
+
+    // 检查路径是否存在
+    if (!existsSync(targetPath)) {
+      log.warn(`Path does not exist: ${targetPath}`);
+      return false;
+    }
+
+    // 如果是文件,在文件管理器中选中它
+    // 如果是目录,打开该目录
+    const stats = statSync(targetPath);
+    if (stats.isFile()) {
+      await shell.showItemInFolder(targetPath);
+    } else {
+      await shell.openPath(targetPath);
+    }
+
     return true;
   });
 
@@ -202,6 +217,7 @@ const registerIpcHandlers = () => {
 
       // 复制文件并重命名
       let copiedCount = 0;
+      let finalPdfPath: string | undefined; // 保存最终的双语PDF文件路径
       for (const file of sourceFiles) {
         const sourcePath = join(record.translatedPath, file);
 
@@ -240,6 +256,11 @@ const registerIpcHandlers = () => {
               `[save] Successfully copied to: ${destPath} (${destStats.size} bytes)`
             );
             copiedCount++;
+
+            // 如果是双语PDF文件,记录为最终文件路径
+            if (suffix.includes("_zh_dual") && finalExt === ".pdf") {
+              finalPdfPath = destPath;
+            }
           } else {
             log.error(`[save] File was not created at: ${destPath}`);
           }
@@ -257,12 +278,16 @@ const registerIpcHandlers = () => {
         `[save] Total files copied: ${copiedCount}/${sourceFiles.length}`
       );
 
+      // 使用双语PDF文件路径,如果没有则使用目录路径
+      const pathToSave = finalPdfPath || cleanedDestination;
+      log.info(`[save] Final savePath: ${pathToSave}`);
+
       const updated = updateHistoryRecord(jobId, {
         status: "success",
-        savePath: cleanedDestination,
+        savePath: pathToSave,
         progress: 100,
       });
-      translationManager.markJobSaved(jobId, cleanedDestination);
+      translationManager.markJobSaved(jobId, pathToSave);
       sendToRenderer("history:updated", getHistory());
       log.info(`[save] Job ${jobId} marked as saved to ${cleanedDestination}`);
       return updated;
@@ -312,7 +337,46 @@ const registerIpcHandlers = () => {
 
   ipcMain.handle("app:open-path", async (_event, targetPath: string) => {
     if (!targetPath) return false;
-    await shell.openPath(targetPath);
+
+    // 检查路径是否存在
+    if (!existsSync(targetPath)) {
+      log.warn(`Path does not exist: ${targetPath}`);
+      return false;
+    }
+
+    // 如果是文件,在文件管理器中选中它
+    // 如果是目录,打开该目录
+    const stats = statSync(targetPath);
+    if (stats.isFile()) {
+      await shell.showItemInFolder(targetPath);
+    } else {
+      await shell.openPath(targetPath);
+    }
+
+    return true;
+  });
+
+  ipcMain.handle("app:open-file", async (_event, filePath: string) => {
+    if (!filePath) return false;
+
+    log.info(`Attempting to open file: ${filePath}`);
+
+    // 检查文件是否存在
+    if (!existsSync(filePath)) {
+      log.warn(`File does not exist: ${filePath}`);
+      return false;
+    }
+
+    // 使用系统默认应用打开文件
+    const result = await shell.openPath(filePath);
+
+    // openPath 返回空字符串表示成功，返回错误消息表示失败
+    if (result) {
+      log.error(`Failed to open file: ${result}`);
+      return false;
+    }
+
+    log.info(`Successfully opened file: ${filePath}`);
     return true;
   });
 };

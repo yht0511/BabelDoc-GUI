@@ -328,62 +328,67 @@ const SettingsPage = () => {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="document-root">翻译结果目录</Label>
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <Input
-                    id="document-root"
-                    value={form.documentRoot}
-                    onChange={(event) =>
-                      handleFieldChange("documentRoot", event.target.value)
-                    }
-                    className="flex-1"
-                  />
+                <div className="flex flex-col gap-2">
                   <div className="flex gap-2">
+                    <Input
+                      id="document-root"
+                      value={form.documentRoot}
+                      onChange={(event) =>
+                        handleFieldChange("documentRoot", event.target.value)
+                      }
+                      className="flex-1 min-w-0 font-mono text-xs"
+                    />
                     <Button
                       type="button"
                       variant="outline"
                       onClick={() => handleSelectDirectory("documentRoot")}
+                      className="whitespace-nowrap flex-shrink-0"
                     >
                       <FolderOpen className="mr-2 h-4 w-4" />
-                      选择目录
+                      选择
                     </Button>
                     <Button
                       type="button"
                       variant="ghost"
                       onClick={() => handleOpenPath(form.documentRoot)}
+                      className="whitespace-nowrap flex-shrink-0"
                     >
                       <Download className="mr-2 h-4 w-4" />
                       查看
                     </Button>
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  所有翻译结果将保存到该目录下，可自定义为云盘或项目文件夹。
+                <p className="text-xs text-muted-foreground break-words">
+                  所有翻译结果将保存到该目录下,可自定义为云盘或项目文件夹。
                 </p>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="uv-bin-dir">BabelDOC 安装目录</Label>
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <Input
-                    id="uv-bin-dir"
-                    value={form.uvBinDir}
-                    onChange={(event) =>
-                      handleFieldChange("uvBinDir", event.target.value)
-                    }
-                    className="flex-1"
-                    placeholder="可留空自动检测"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => handleSelectDirectory("uvBinDir")}
-                  >
-                    <FolderOpen className="mr-2 h-4 w-4" />
-                    定位
-                  </Button>
+                <div className="flex flex-col gap-2">
+                  <div className="flex gap-2">
+                    <Input
+                      id="uv-bin-dir"
+                      value={form.uvBinDir}
+                      onChange={(event) =>
+                        handleFieldChange("uvBinDir", event.target.value)
+                      }
+                      className="flex-1 min-w-0 font-mono text-xs"
+                      placeholder="可留空自动检测"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => handleSelectDirectory("uvBinDir")}
+                      className="whitespace-nowrap flex-shrink-0"
+                    >
+                      <FolderOpen className="mr-2 h-4 w-4" />
+                      定位
+                    </Button>
+                  </div>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  若留空，系统会在环境检测时自动查找 uv 工具的 bin 目录。
+                <p className="text-xs text-muted-foreground break-words">
+                  若留空,系统会在环境检测时自动查找 uv 工具的 bin 目录。
                 </p>
               </div>
 
@@ -402,11 +407,16 @@ const SettingsPage = () => {
                 />
               </div> */}
 
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="debug-mode">Debug 模式</Label>
-                  <p className="text-xs text-muted-foreground">
-                    启用后可以看到详细的翻译进度，但生成的文档会包含识别框。关闭后文档更清晰，但进度更新较慢。
+              <div className="flex items-start justify-between gap-4 rounded-md border border-border/60 bg-muted/10 p-3">
+                <div className="flex-1 space-y-0.5">
+                  <Label
+                    htmlFor="debug-mode"
+                    className="text-sm font-medium cursor-pointer"
+                  >
+                    Debug 模式
+                  </Label>
+                  <p className="text-xs text-muted-foreground break-words">
+                    启用后可以看到详细的翻译进度,但生成的文档会包含识别框。关闭后文档更清晰,但进度更新较慢。
                   </p>
                 </div>
                 <Switch
@@ -415,6 +425,7 @@ const SettingsPage = () => {
                   onCheckedChange={(checked) =>
                     handleBabeldocChange("debug", checked)
                   }
+                  className="flex-shrink-0"
                 />
               </div>
 
@@ -453,16 +464,16 @@ const SettingsPage = () => {
                     key={option.value}
                     type="button"
                     variant={isActive ? "default" : "outline"}
-                    className="flex w-full items-start justify-between gap-3"
+                    className="flex h-auto w-full items-start justify-between gap-3 py-3"
                     onClick={() => handleFieldChange("theme", option.value)}
                   >
-                    <div className="text-left">
+                    <div className="flex-1 text-left">
                       <p className="text-sm font-medium">{option.label}</p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-muted-foreground break-words">
                         {option.description}
                       </p>
                     </div>
-                    {isActive && <Check className="h-4 w-4" />}
+                    {isActive && <Check className="h-4 w-4 flex-shrink-0" />}
                   </Button>
                 );
               })}
@@ -478,11 +489,39 @@ const SettingsPage = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               {environmentSummary ? (
-                <div className="space-y-2 rounded-md border border-border/60 bg-muted/20 p-3 text-xs text-muted-foreground">
-                  <p>Python: {environmentSummary.pythonPath}</p>
-                  <p>uv: {environmentSummary.uvPath}</p>
-                  <p>BabelDOC: {environmentSummary.babeldocPath}</p>
-                  <p>工具目录: {environmentSummary.uvBinDir}</p>
+                <div className="space-y-2 rounded-md border border-border/60 bg-muted/20 p-3 text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-foreground/80 flex-shrink-0">
+                      Python:
+                    </span>
+                    <code className="font-mono text-muted-foreground overflow-x-auto whitespace-nowrap flex-1 scrollbar-thin">
+                      {environmentSummary.pythonPath}
+                    </code>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-foreground/80 flex-shrink-0">
+                      uv:
+                    </span>
+                    <code className="font-mono text-muted-foreground overflow-x-auto whitespace-nowrap flex-1 scrollbar-thin">
+                      {environmentSummary.uvPath}
+                    </code>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-foreground/80 flex-shrink-0">
+                      BabelDOC:
+                    </span>
+                    <code className="font-mono text-muted-foreground overflow-x-auto whitespace-nowrap flex-1 scrollbar-thin">
+                      {environmentSummary.babeldocPath}
+                    </code>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-foreground/80 flex-shrink-0">
+                      工具目录:
+                    </span>
+                    <code className="font-mono text-muted-foreground overflow-x-auto whitespace-nowrap flex-1 scrollbar-thin">
+                      {environmentSummary.uvBinDir}
+                    </code>
+                  </div>
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground">
