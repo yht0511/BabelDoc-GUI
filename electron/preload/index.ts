@@ -92,7 +92,9 @@ const api = {
   },
 };
 
+console.log("[preload] Exposing electronAPI to main world");
 contextBridge.exposeInMainWorld("electronAPI", api);
+console.log("[preload] electronAPI exposed successfully");
 
 declare global {
   interface Window {

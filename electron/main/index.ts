@@ -31,6 +31,19 @@ import type {
 const isDev = !app.isPackaged;
 const currentDir = fileURLToPath(new URL(".", import.meta.url));
 
+// 在打包后使用更可靠的路径解析
+const getPreloadPath = () => {
+  if (isDev) {
+    return join(currentDir, "../preload/index.mjs");
+  }
+  // 打包后: app.asar/dist-electron/main/index.js
+  // preload: app.asar/dist-electron/preload/index.mjs
+  const preloadPath = join(__dirname, "../preload/index.mjs");
+  log.info(`[main] Preload path: ${preloadPath}`);
+  log.info(`[main] Preload exists: ${existsSync(preloadPath)}`);
+  return preloadPath;
+};
+
 let mainWindow: BrowserWindow | null = null;
 const translationManager = new TranslationManager();
 
@@ -389,7 +402,7 @@ const createWindow = async () => {
     minHeight: 600,
     show: false,
     webPreferences: {
-      preload: join(currentDir, "../preload/index.mjs"),
+      preload: getPreloadPath(),
       contextIsolation: true,
       sandbox: false,
     },

@@ -42,7 +42,8 @@ export default defineConfig({
         input: resolve(rootDir, "electron/preload/index.ts"),
         external: ["electron"],
         output: {
-          format: "cjs", // preload 脚本通常使用 CommonJS
+          format: "es", // 改回 ES 模块格式
+          entryFileNames: "[name].mjs", // 使用 .mjs 扩展名
         },
       },
     },
