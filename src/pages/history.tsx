@@ -298,7 +298,7 @@ const HistoryPage = () => {
             return (
               <Card key={record.id} className="overflow-hidden">
                 <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="space-y-1">
+                  <div className="flex-1 min-w-0 space-y-1">
                     <CardTitle className="text-lg font-semibold">
                       {record.title}
                     </CardTitle>
@@ -306,7 +306,10 @@ const HistoryPage = () => {
                       {record.authors ?? "未知作者"}
                     </CardDescription>
                   </div>
-                  <Badge variant={meta.variant} className="capitalize">
+                  <Badge
+                    variant={meta.variant}
+                    className="capitalize flex-shrink-0 whitespace-nowrap self-start"
+                  >
                     {meta.label}
                   </Badge>
                 </CardHeader>

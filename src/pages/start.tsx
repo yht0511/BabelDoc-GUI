@@ -431,8 +431,8 @@ const StartPage = () => {
 
     return (
       <Card key={job.id} className="overflow-hidden">
-        <CardHeader className="flex-row items-center justify-between space-y-0">
-          <div>
+        <CardHeader className="flex-row items-center justify-between space-y-0 gap-3">
+          <div className="flex-1 min-w-0">
             <CardTitle className="text-base font-semibold">
               {job.originalName}
             </CardTitle>
@@ -444,7 +444,12 @@ const StartPage = () => {
               {job.status === "failed" && job.error && ` · ${job.error}`}
             </CardDescription>
           </div>
-          <Badge variant={meta.variant}>{meta.label}</Badge>
+          <Badge
+            variant={meta.variant}
+            className="flex-shrink-0 whitespace-nowrap"
+          >
+            {meta.label}
+          </Badge>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
