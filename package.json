@@ -9,10 +9,19 @@
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
+    "generate-icons": "node scripts/generate-icon.mjs",
+    "prebuild": "npm run generate-icons",
     "build:mac": "npm run build && electron-builder --mac",
     "build:mac-arm64": "npm run build && electron-builder --mac --arm64",
     "build:mac-x64": "npm run build && electron-builder --mac --x64",
-    "build:mac-universal": "npm run build && electron-builder --mac --universal"
+    "build:mac-universal": "npm run build && electron-builder --mac --universal",
+    "build:win": "npm run build && electron-builder --win",
+    "build:win-x64": "npm run build && electron-builder --win --x64",
+    "build:win-arm64": "npm run build && electron-builder --win --arm64",
+    "build:linux": "npm run build && electron-builder --linux",
+    "build:linux-x64": "npm run build && electron-builder --linux --x64",
+    "build:linux-arm64": "npm run build && electron-builder --linux --arm64",
+    "build:all": "npm run build && electron-builder --mac --win --linux"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.1",
@@ -42,6 +51,7 @@
     "electron": "^32.1.2",
     "electron-builder": "^26.0.12",
     "electron-vite": "^2.3.0",
+    "png-to-ico": "^3.0.1",
     "postcss": "^8.4.41",
     "tailwindcss": "^3.4.13",
     "tslib": "^2.6.3",
@@ -50,7 +60,7 @@
   },
   "build": {
     "appId": "com.babeldoc.gui",
-    "productName": "BabelDOC",
+    "productName": "BabelDOC GUI",
     "directories": {
       "output": "release"
     },
@@ -90,6 +100,70 @@
           "path": "/Applications"
         }
       ]
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico",
+      "executableName": "BabelDOC-GUI",
+      "artifactName": "${productName}-${version}-${arch}-Setup.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "BabelDOC GUI",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "installerHeaderIcon": "build/icon.ico",
+      "deleteAppDataOnUninstall": false,
+      "runAfterFinish": true,
+      "menuCategory": "BabelDOC"
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "rpm",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "icon": "build/icon.png",
+      "category": "Office",
+      "maintainer": "BabelDOC Team",
+      "artifactName": "${productName}-${version}-${arch}.${ext}"
     }
   }
 }

@@ -437,11 +437,30 @@ const createWindow = async () => {
 };
 
 app.whenReady().then(() => {
+  log.info("=".repeat(60));
+  log.info("BabelDOC GUI Starting...");
+  log.info(`Platform: ${process.platform}`);
+  log.info(`Architecture: ${process.arch}`);
+  log.info(`Electron: ${process.versions.electron}`);
+  log.info(`Node: ${process.versions.node}`);
+  log.info(`App path: ${app.getAppPath()}`);
+  log.info(`User data: ${app.getPath("userData")}`);
+  log.info(`Executable: ${app.getPath("exe")}`);
+  log.info("=".repeat(60));
+
   registerTranslationBroadcast();
   registerIpcHandlers();
 
   createWindow().catch((error) => {
     log.error("Failed to create window", error);
+    // 在 Windows 上显示错误对话框
+    if (process.platform === "win32") {
+      const { dialog } = require("electron");
+      dialog.showErrorBox(
+        "启动失败",
+        `无法创建应用窗口:\n${error.message}\n\n请查看日志文件获取详细信息。`
+      );
+    }
   });
 
   app.on("activate", () => {
