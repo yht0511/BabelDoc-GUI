@@ -1,5 +1,4 @@
 release/
-build/
 dist/
 node_modules/
 .npm-cache/
