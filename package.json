@@ -21,7 +21,10 @@
     "build:linux": "npm run build && electron-builder --linux",
     "build:linux-x64": "npm run build && electron-builder --linux --x64",
     "build:linux-arm64": "npm run build && electron-builder --linux --arm64",
-    "build:all": "npm run build && electron-builder --mac --win --linux"
+    "build:all": "npm run build && electron-builder --mac --win --linux",
+    "release:patch": "npm version patch && git push && git push --tags",
+    "release:minor": "npm version minor && git push && git push --tags",
+    "release:major": "npm version major && git push && git push --tags"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.1",
