@@ -10,6 +10,9 @@ on:
       - main
       - develop
 
+permissions:
+  contents: read # 只读权限即可
+
 jobs:
   build:
     strategy:
