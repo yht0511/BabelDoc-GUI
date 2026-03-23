@@ -1,6 +1,6 @@
 {
   "name": "babeldoc-gui",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Cross-platform Electron GUI for the BabelDOC translation workflow.",
   "main": "dist-electron/main/index.js",
   "author": "",
