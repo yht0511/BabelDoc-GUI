@@ -155,7 +155,7 @@ export class TranslationManager extends EventEmitter {
     if (settings.babeldoc.debug) {
       args.push("--debug"); // 启用 debug 输出以获取结构化进度数据
       log.info(`[babeldoc] Debug mode enabled`);
-    }else{
+    } else {
       log.info(`[babeldoc] Debug mode disabled`);
     }
 
@@ -167,12 +167,40 @@ export class TranslationManager extends EventEmitter {
       args.push(...parseExtraFlags(settings.babeldoc.extraFlags));
     }
 
-    const command = environment?.babeldocPath ?? "babeldoc";
+    const customPythonScript = `
+import sys
+import json
+from babeldoc.main import cli
+import babeldoc.main
 
-    this.appendLog(job, `执行命令: ${command} ${args.join(" ")}`);
+old_create = babeldoc.main.create_progress_handler
+
+def custom_create(config, show_log=False):
+    class DummyContext:
+        def __enter__(self): pass
+        def __exit__(self, *args): pass
+    def new_handler(event):
+        if "overall_progress" in event:
+            print("[JSON_PROGRESS]" + json.dumps({
+                "overall_progress": event.get("overall_progress", 0),
+                "stage": event.get("stage", "")
+            }), flush=True)
+    return DummyContext(), new_handler
+
+babeldoc.main.create_progress_handler = custom_create
+
+sys.argv[0] = "babeldoc"
+sys.exit(cli())
+`.trim();
+
+    const command =
+      environment?.babeldocPythonPath ?? (environment?.pythonPath || "python");
+    const fullArgs = ["-c", customPythonScript, ...args];
+
+    this.appendLog(job, `执行命令: ${command} ${fullArgs.join(" ")}`);
 
     await new Promise<void>((resolve, reject) => {
-      const child = spawn(command, args, {
+      const child = spawn(command, fullArgs, {
         env: {
           ...process.env,
           BABELDOC_OUTPUT_DIR: outputDir,
@@ -293,8 +321,32 @@ export class TranslationManager extends EventEmitter {
   }
 
   private tryParseDebugProgress(job: TranslationQueueItem, logLine: string) {
-    // 直接用字符串匹配提取 overall_progress 的值，避免 JSON 解析因换行格式错乱而失败
-    // 匹配格式: 'overall_progress': 74.86959453046502
+    if (logLine.includes("[JSON_PROGRESS]")) {
+      try {
+        const jsonStr = logLine.split("[JSON_PROGRESS]")[1].trim();
+        const data = JSON.parse(jsonStr);
+        const overallProgress = Math.round(parseFloat(data.overall_progress));
+        if (
+          !isNaN(overallProgress) &&
+          overallProgress > job.progress &&
+          overallProgress <= 100
+        ) {
+          job.progress = overallProgress;
+          this.emitStatus(job.id, job.status, overallProgress);
+          if (data.stage) {
+            this.emitProgress({
+              id: job.id,
+              message: `BabelDOC 正在处理: ${data.stage}`,
+            });
+          }
+        }
+      } catch (e) {
+        // parsing failed
+      }
+      return;
+    }
+
+    // fallback: directly match dict format if present
     const overallProgressMatch = logLine.match(
       /'overall_progress':\s*([\d.]+)/
     );

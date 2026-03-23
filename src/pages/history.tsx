@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import electron from "../lib/electron";
 import { useAppStore } from "@/stores/app-store";
 import type { TranslationJobStatus, TranslationRecord } from "@/types/ipc";
@@ -81,6 +81,33 @@ const statusOptions: Array<{ value: TranslationJobStatus; label: string }> = [
   { value: "success", label: statusMeta.success.label },
   { value: "failed", label: statusMeta.failed.label },
 ];
+
+const LogViewer = ({ logs }: { logs: string[] }) => {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [logs.length]);
+
+  return (
+    <ScrollArea className="h-48 rounded-md border border-border/60 bg-background/60">
+      <div className="space-y-1 p-3 text-xs">
+        {logs.length === 0 ? (
+          <p className="text-muted-foreground">尚无日志记录。</p>
+        ) : (
+          logs.map((line, index) => (
+            <p key={`log-${index}`} className="whitespace-pre-wrap">
+              {line}
+            </p>
+          ))
+        )}
+        <div ref={scrollRef} />
+      </div>
+    </ScrollArea>
+  );
+};
 
 const HistoryPage = () => {
   const history = useAppStore((state) => state.history);
@@ -490,19 +517,7 @@ const HistoryPage = () => {
               </div>
               <div className="space-y-2">
                 <p className="text-sm font-medium">日志</p>
-                <ScrollArea className="h-48 rounded-md border border-border/60 bg-background/60">
-                  <div className="space-y-1 p-3 text-xs">
-                    {selectedRecord.logs.length === 0 ? (
-                      <p className="text-muted-foreground">尚无日志记录。</p>
-                    ) : (
-                      selectedRecord.logs.map((line, index) => (
-                        <p key={`log-${index}`} className="whitespace-pre-wrap">
-                          {line}
-                        </p>
-                      ))
-                    )}
-                  </div>
-                </ScrollArea>
+                <LogViewer logs={selectedRecord.logs} />
               </div>
             </div>
           )}

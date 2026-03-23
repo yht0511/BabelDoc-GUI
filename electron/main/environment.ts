@@ -31,19 +31,25 @@ const execFileAsync = promisify(execFile);
 const getExtendedEnv = (): NodeJS.ProcessEnv => {
   const homeDir = process.env.HOME || "";
   const commonPaths = [
-    "/usr/local/bin",
     "/opt/homebrew/bin",
-    "/usr/bin",
+    "/usr/local/bin",
+    "/opt/anaconda3/bin",
+    join(homeDir, "anaconda3/bin"),
+    join(homeDir, "miniconda3/bin"),
+    join(homeDir, "opt/miniconda3/bin"),
     join(homeDir, ".pyenv/shims"),
     join(homeDir, ".local/bin"), // uv 默认安装路径
     join(homeDir, ".cargo/bin"), // Rust 工具（uv 的另一个安装位置）
+    join(homeDir, "Library/Python/3.13/bin"),
+    join(homeDir, "Library/Python/3.12/bin"),
     join(homeDir, "Library/Python/3.11/bin"),
     join(homeDir, "Library/Python/3.10/bin"),
+    "/usr/bin",
   ];
 
   return {
     ...process.env,
-    PATH: [...commonPaths, process.env.PATH || ""].join(":"),
+    PATH: [process.env.PATH || "", ...commonPaths].filter(Boolean).join(":"),
   };
 };
 
@@ -100,8 +106,31 @@ const runCommandStreaming = async (
 };
 
 const detectPython = async (): Promise<string> => {
+  const homeDir = process.env.HOME || "";
+  const commonPaths = [
+    "/opt/homebrew/bin",
+    "/usr/local/bin",
+    "/opt/anaconda3/bin",
+    join(homeDir, "anaconda3/bin"),
+    join(homeDir, "miniconda3/bin"),
+    join(homeDir, "opt/miniconda3/bin"),
+    join(homeDir, ".pyenv/shims"),
+    join(homeDir, "Library/Python/3.13/bin"),
+    join(homeDir, "Library/Python/3.12/bin"),
+    join(homeDir, "Library/Python/3.11/bin"),
+    join(homeDir, "Library/Python/3.10/bin"),
+    "/usr/bin",
+  ];
+
   const candidates =
-    process.platform === "win32" ? ["python", "py"] : ["python3", "python"];
+    process.platform === "win32"
+      ? ["python", "py"]
+      : [
+          "python3",
+          "python",
+          ...commonPaths.map((p) => join(p, "python3")),
+          ...commonPaths.map((p) => join(p, "python")),
+        ];
 
   log.info(`[env] Searching for Python in extended PATH`);
 
@@ -151,11 +180,19 @@ const ensureUvInstalled = async (
           }
         );
       } else {
-        // Windows 使用 pip 安装
+        // Windows 使用官方安装脚本
         await runCommandStreaming(
-          pythonPath,
-          ["-m", "pip", "install", "--user", "--upgrade", "uv"],
-          notify
+          "powershell",
+          [
+            "-ExecutionPolicy",
+            "ByPass",
+            "-c",
+            "irm https://astral.sh/uv/install.ps1 | iex",
+          ],
+          (chunk) => {
+            notify(chunk);
+            log.info(`[env] uv install: ${chunk.trim()}`);
+          }
         );
       }
 
@@ -177,24 +214,32 @@ const ensureUvInstalled = async (
 
 const ensureBabeldocInstalled = async (
   uvPath: string,
+  pythonPath: string,
   notify: (chunk: string) => void
 ): Promise<void> => {
   try {
     const { stdout } = await runCommand("babeldoc", ["--version"]);
     log.info(`[env] BabelDOC already installed: ${stdout}`);
   } catch {
-    notify("正在安装 BabelDOC，请稍候…\n");
+    notify("正在使用 uv tool 安装 BabelDOC，请稍候…\n");
     await runCommandStreaming(
       uvPath,
-      ["pip", "install", "--upgrade", "BabelDOC"],
+      ["tool", "install", "--python", pythonPath, "--force", "BabelDOC"],
       notify
     );
   }
 };
 
-const resolveUvBinDir = async (uvPath: string): Promise<string> => {
-  const { stdout } = await runCommand(uvPath, ["tool", "dir", "--bin"]);
-  return stdout.trim();
+const resolveUvToolDirs = async (
+  uvPath: string
+): Promise<{ uvBinDir: string; uvToolDir: string }> => {
+  const { stdout: binStdout } = await runCommand(uvPath, [
+    "tool",
+    "dir",
+    "--bin",
+  ]);
+  const { stdout: toolStdout } = await runCommand(uvPath, ["tool", "dir"]);
+  return { uvBinDir: binStdout.trim(), uvToolDir: toolStdout.trim() };
 };
 
 export const ensureEnvironment = async (
@@ -235,7 +280,7 @@ export const ensureEnvironment = async (
 
   emitStatus(notify, "babeldoc", "running", "正在确认 BabelDOC 可用…");
   try {
-    await ensureBabeldocInstalled(uvPath, (chunk) => {
+    await ensureBabeldocInstalled(uvPath, pythonPath, (chunk) => {
       emitStatus(notify, "babeldoc", "running", chunk.trim());
     });
     emitStatus(notify, "babeldoc", "success", "BabelDOC 已就绪");
@@ -251,8 +296,11 @@ export const ensureEnvironment = async (
 
   emitStatus(notify, "uv-bin-dir", "running", "正在定位 BabelDOC 可执行路径…");
   let uvBinDir = "";
+  let uvToolDir = "";
   try {
-    uvBinDir = await resolveUvBinDir(uvPath);
+    const dirs = await resolveUvToolDirs(uvPath);
+    uvBinDir = dirs.uvBinDir;
+    uvToolDir = dirs.uvToolDir;
     setUvBinDir(uvBinDir);
     emitStatus(notify, "uv-bin-dir", "success", uvBinDir);
   } catch (error) {
@@ -268,10 +316,21 @@ export const ensureEnvironment = async (
   const babeldocPath = uvBinDir
     ? join(uvBinDir, process.platform === "win32" ? "babeldoc.exe" : "babeldoc")
     : "babeldoc";
+
+  const babeldocPythonPath = uvToolDir
+    ? join(
+        uvToolDir,
+        "babeldoc",
+        process.platform === "win32" ? "Scripts" : "bin",
+        process.platform === "win32" ? "python.exe" : "python"
+      )
+    : pythonPath;
+
   cachedEnvironment = {
     pythonPath,
     uvPath,
     babeldocPath,
+    babeldocPythonPath,
     uvBinDir,
   };
 

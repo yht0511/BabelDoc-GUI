@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import electron from "../lib/electron";
 import { useAppStore } from "@/stores/app-store";
 import type {
@@ -81,6 +81,36 @@ const statusMeta: Record<
     variant: "destructive",
     description: "翻译或保存过程中出现错误",
   },
+};
+
+const LogViewer = ({ job }: { job: TranslationQueueItem }) => {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [job.logs.length]);
+
+  return (
+    <ScrollArea className="h-40 rounded-md border border-border/60 bg-background/60">
+      <div className="space-y-1 p-3">
+        {job.logs.length === 0 ? (
+          <p className="text-xs text-muted-foreground">尚无日志输出。</p>
+        ) : (
+          job.logs.slice(-200).map((line, index) => (
+            <p
+              key={`${job.id}-log-${index}`}
+              className="whitespace-pre-wrap text-xs"
+            >
+              {line}
+            </p>
+          ))
+        )}
+        <div ref={scrollRef} />
+      </div>
+    </ScrollArea>
+  );
 };
 
 const StartPage = () => {
@@ -490,24 +520,7 @@ const StartPage = () => {
               <span>日志输出</span>
               <span className="text-xs text-muted-foreground">实时更新</span>
             </div>
-            <ScrollArea className="h-40 rounded-md border border-border/60 bg-background/60">
-              <div className="space-y-1 p-3">
-                {job.logs.length === 0 ? (
-                  <p className="text-xs text-muted-foreground">
-                    尚无日志输出。
-                  </p>
-                ) : (
-                  job.logs.slice(-200).map((line, index) => (
-                    <p
-                      key={`${job.id}-log-${index}`}
-                      className="whitespace-pre-wrap text-xs"
-                    >
-                      {line}
-                    </p>
-                  ))
-                )}
-              </div>
-            </ScrollArea>
+            <LogViewer job={job} />
           </div>
 
           <div className="flex flex-wrap gap-2">
@@ -597,7 +610,7 @@ const StartPage = () => {
           <CardContent className="space-y-6">
             <div className="flex flex-col gap-3 sm:flex-row">
               <Button
-                className="flex-1"
+                className="flex-none sm:w-1/3"
                 onClick={handleSelectFiles}
                 disabled={loadingAction === "files"}
               >

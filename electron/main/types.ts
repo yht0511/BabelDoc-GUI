@@ -124,5 +124,6 @@ export interface EnvironmentSummary {
   pythonPath: string;
   uvPath: string;
   babeldocPath: string;
+  babeldocPythonPath: string;
   uvBinDir: string;
 }
