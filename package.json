@@ -1,6 +1,6 @@
 {
   "name": "babeldoc-gui",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Cross-platform Electron GUI for the BabelDOC translation workflow.",
   "main": "dist-electron/main/index.js",
   "author": "",
@@ -123,13 +123,14 @@
       ],
       "icon": "build/icon.ico",
       "executableName": "BabelDOC-GUI",
-      "artifactName": "${productName}-${version}-${arch}-Setup.${ext}"
+      "artifactName": "BabelDOC-GUI-${version}-${arch}.${ext}"
     },
     "nsis": {
+      "artifactName": "BabelDOC-GUI-${version}-${arch}-Setup.${ext}",
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "perMachine": false,
-      "createDesktopShortcut": true,
+      "createDesktopShortcut": "always",
       "createStartMenuShortcut": true,
       "shortcutName": "BabelDOC GUI",
       "installerIcon": "build/icon.ico",

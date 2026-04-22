@@ -84,16 +84,20 @@ const statusMeta: Record<
 };
 
 const LogViewer = ({ job }: { job: TranslationQueueItem }) => {
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollIntoView({ behavior: "smooth" });
+    const viewport = viewportRef.current;
+    if (viewport) {
+      viewport.scrollTop = viewport.scrollHeight;
     }
   }, [job.logs.length]);
 
   return (
-    <ScrollArea className="h-40 rounded-md border border-border/60 bg-background/60">
+    <ScrollArea
+      viewportRef={viewportRef}
+      className="h-40 rounded-md border border-border/60 bg-background/60"
+    >
       <div className="space-y-1 p-3">
         {job.logs.length === 0 ? (
           <p className="text-xs text-muted-foreground">尚无日志输出。</p>
@@ -107,7 +111,6 @@ const LogViewer = ({ job }: { job: TranslationQueueItem }) => {
             </p>
           ))
         )}
-        <div ref={scrollRef} />
       </div>
     </ScrollArea>
   );

@@ -45,8 +45,8 @@
 
 #### Windows
 
-- `BabelDOC-{version}-x64-Setup.exe` - x64 NSIS 安装程序
-- `BabelDOC-{version}-x64.zip` - x64 便携版
+- `BabelDOC-GUI-{version}-x64-Setup.exe` - x64 NSIS 安装程序，会创建开始菜单和桌面入口
+- `BabelDOC-GUI-{version}-x64.zip` - x64 便携版，解压后直接运行 `BabelDOC-GUI.exe`，不会自动创建快捷方式
 
 #### Linux
 

@@ -17,7 +17,7 @@
 前往 [Releases](https://github.com/yht0511/BabelDoc-GUI/releases) 页面下载最新版本：
 
 - **macOS**: 下载 `.dmg` 或 `.zip` 文件
-- **Windows**: 下载 `.exe` 安装程序或 `.zip` 便携版
+- **Windows**: 下载 `.exe` 安装程序或 `.zip` 便携版。需要开始菜单/桌面入口请使用 `.exe`，`.zip` 解压后直接运行 `BabelDOC-GUI.exe`，不会自动创建快捷方式。
 - **Linux**: 下载 `.AppImage`, `.deb` 或 `.rpm` 文件
 
 ## 开发

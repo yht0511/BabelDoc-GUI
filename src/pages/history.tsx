@@ -83,16 +83,20 @@ const statusOptions: Array<{ value: TranslationJobStatus; label: string }> = [
 ];
 
 const LogViewer = ({ logs }: { logs: string[] }) => {
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollIntoView({ behavior: "smooth" });
+    const viewport = viewportRef.current;
+    if (viewport) {
+      viewport.scrollTop = viewport.scrollHeight;
     }
   }, [logs.length]);
 
   return (
-    <ScrollArea className="h-48 rounded-md border border-border/60 bg-background/60">
+    <ScrollArea
+      viewportRef={viewportRef}
+      className="h-48 rounded-md border border-border/60 bg-background/60"
+    >
       <div className="space-y-1 p-3 text-xs">
         {logs.length === 0 ? (
           <p className="text-muted-foreground">尚无日志记录。</p>
@@ -103,7 +107,6 @@ const LogViewer = ({ logs }: { logs: string[] }) => {
             </p>
           ))
         )}
-        <div ref={scrollRef} />
       </div>
     </ScrollArea>
   );
@@ -117,8 +120,7 @@ const HistoryPage = () => {
   const [statusFilter, setStatusFilter] = useState<
     "all" | TranslationJobStatus
   >("all");
-  const [selectedRecord, setSelectedRecord] =
-    useState<TranslationRecord | null>(null);
+  const [selectedRecordId, setSelectedRecordId] = useState<string | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [pageMessage, setPageMessage] = useState<string | null>(null);
   const [pageError, setPageError] = useState<string | null>(null);
@@ -153,6 +155,11 @@ const HistoryPage = () => {
       return haystack.includes(keyword);
     });
   }, [history, searchTerm, statusFilter]);
+
+  const selectedRecord = useMemo(
+    () => history.find((record) => record.id === selectedRecordId) ?? null,
+    [history, selectedRecordId]
+  );
 
   const handleOpenRecord = async (record: TranslationRecord) => {
     if (!electron) {
@@ -230,13 +237,13 @@ const HistoryPage = () => {
   };
 
   const openDetail = (record: TranslationRecord) => {
-    setSelectedRecord(record);
+    setSelectedRecordId(record.id);
     setDetailOpen(true);
   };
 
   const closeDetail = () => {
     setDetailOpen(false);
-    setTimeout(() => setSelectedRecord(null), 200);
+    setTimeout(() => setSelectedRecordId(null), 200);
   };
 
   return (
